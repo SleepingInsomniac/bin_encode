@@ -1,0 +1,35 @@
+#!/usr/bin/env ruby
+require 'thor'
+require_relative "../lib/bin_encode"
+
+module BinEncode
+  class Cli < Thor::Group
+
+    desc "Encode some text"
+    class_option :decode, aliases: 'd', type: :boolean, desc: 'Decode'
+    class_option :base, aliases: 'b', type: :numeric, default: 2, desc: 'Encoding base'
+    class_option :output, aliases: 'o', type: :string, desc: 'Export to file'
+
+    def setup
+      $stdout.flush
+      @input = ARGF
+      @output = options[:output] ? File.open(options[:output], 'w') : $stdout
+      @encoder = BinEncode::Encoder.new
+    end
+
+    def exec
+      if options[:decode]
+        @output.write @encoder.decode(@input, options[:base])
+      else
+        @output.write @encoder.encode(@input, options[:base])
+      end
+    end
+
+    def cleanup
+      @output.close
+    end
+
+  end
+end
+
+BinEncode::Cli.start(ARGV)
