@@ -6,15 +6,25 @@ module BinEncode
   class Cli < Thor::Group
 
     desc "Encode some text"
+    argument :input, type: :string, desc: 'The input'
     class_option :decode, aliases: 'd', type: :boolean, desc: 'Decode'
     class_option :base, aliases: 'b', type: :numeric, default: 2, desc: 'Encoding base'
     class_option :output, aliases: 'o', type: :string, desc: 'Export to file'
+    class_option :file, aliases: 'f', type: :boolean, desc: 'Input is a file'
+    class_option :message_space, aliases: 's', type: :string, desc: 'Message space'
+    class_option :message_space_file, aliases: 'm', type: :string, desc: 'Message space (from file)'
 
     def setup
       $stdout.flush
-      @input = ARGF
+      @input = options[:file] ? File.read(File.expand_path(input)) : input
       @output = options[:output] ? File.open(options[:output], 'w') : $stdout
-      @encoder = BinEncode::Encoder.new
+      if options[:message_space]
+        @encoder = BinEncode::Encoder.new options[:message_space]
+      elsif options[:message_space_file]
+        @encoder = BinEncode::Encoder.new File.read(options[:message_space_file])
+      else
+        @encoder = BinEncode::Encoder.new
+      end
     end
 
     def exec
@@ -32,4 +42,4 @@ module BinEncode
   end
 end
 
-BinEncode::Cli.start(ARGV)
+BinEncode::Cli.start
